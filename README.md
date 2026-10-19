@@ -26,12 +26,31 @@ files never leave your machine.
 - **Everything local** — parsing, filtering, and rendering all happen in
   your browser
 
+## Installation
+
+Requires [Node.js](https://nodejs.org/) 18 or newer.
+
+```bash
+git clone https://github.com/MatthieuJoulot/gpx-library-viewer.git
+cd gpx-library-viewer
+npm install
+```
+
+To run a production build instead of the dev server:
+
+```bash
+npm run build          # outputs a static site to dist/
+npx vite preview       # serve it locally
+```
+
+`dist/` is fully static — host it anywhere (GitHub Pages, Netlify, any
+file server).
+
 ## Using it
 
 1. **Start the app** (Chromium recommended — see note below):
 
    ```bash
-   npm install
    npm run dev
    ```
 
@@ -70,12 +89,6 @@ punctuation, and case (validated on a 460-file corpus: 460/460 joined).
 **GPX files without a matching sheets.json entry are fully supported** —
 they simply show their normal stats and filename; the links section is just
 omitted.
-
-## Build
-
-```bash
-npm run build   # outputs a static site to dist/
-```
 
 ## Tech
 
