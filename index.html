@@ -237,6 +237,12 @@
         display: flex;
         justify-content: space-between;
       }
+      #gh-link {
+        color: var(--muted);
+        text-decoration: none;
+        padding: 3px 8px;
+      }
+      #gh-link:hover { color: var(--text); }
 
       /* ---------- map ---------- */
       #map {
@@ -287,9 +293,10 @@
         <div id="tree"></div>
         <div id="footer" style="display:none">
           <span id="track-count"></span>
-          <span style="display:flex; gap:6px">
+          <span style="display:flex; gap:6px; align-items:center">
             <button id="add-lib-btn" title="Add another GPX folder to the library">+ Folder</button>
             <button id="rescan-btn">Rescan</button>
+            <a id="gh-link" href="https://github.com/MatthieuJoulot/gpx-library-viewer" target="_blank" rel="noopener" title="Source on GitHub">GitHub ↗</a>
           </span>
         </div>
       </div>
