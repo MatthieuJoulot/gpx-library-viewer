@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPX Library</title>
+    <link rel="stylesheet" href="node_modules/maplibre-gl/dist/maplibre-gl.css" />
+    <style>
+      :root {
+        --sidebar-width: 340px;
+        --bg: #ffffff;
+        --panel: #f7f8fa;
+        --border: #e2e4e8;
+        --text: #1c1e21;
+        --muted: #6b7075;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: var(--text);
+      }
+      #app { display: flex; height: 100vh; }
+
+      /* ---------- sidebar ---------- */
+      #sidebar {
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+      }
+      #sidebar header {
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      #sidebar header h1 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+      #search {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        background: var(--bg);
+      }
+      #search:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+      .filter-box {
+        margin-top: 10px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: var(--bg);
+      }
+      .filter-box-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .filter-box-head .filter-title { margin-bottom: 0; }
+      #filters-reset-btn {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 11px;
+        padding: 2px 8px;
+        cursor: pointer;
+      }
+      #filters-reset-btn:hover { color: var(--text); border-color: var(--accent); }
+      .filter-title {
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      #coll-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+      #coll-filters label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      #coll-filters input { accent-color: var(--accent); margin: 0; }
+      .num-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .num-input {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        background: var(--bg);
+      }
+      .num-input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+      .num-sep { color: var(--muted); }
+
+      #tree {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 6px 20px;
+      }
+
+      .collection {}
+      .collection > .coll-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        user-select: none;
+      }
+      .collection > .coll-head:hover { background: #eceef1; }
+      .collection > .coll-head .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .collection > .coll-head .count {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--muted);
+      }
+      .swatch {
+        width: 12px;
+        height: 12px;
+        min-width: 12px;
+        border-radius: 3px;
+        display: inline-block;
+        border: 1px solid rgba(0,0,0,0.15);
+      }
+      .collection .files { display: none; }
+      .collection.open .files { display: block; }
+      .coll-head .chev { transition: transform .15s; font-size: 10px; color: var(--muted); }
+      .collection.open .chev { transform: rotate(90deg); }
+
+      .item {
+        padding: 5px 8px 5px 26px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .item:hover { background: #eceef1; }
+      .item.selected { background: var(--accent-soft); }
+      .item .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .item .row .name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .item .details {
+        display: none;
+        margin: 6px 0 4px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .item.selected .details { display: block; }
+      .item .details table { border-collapse: collapse; }
+      .item .details td { padding: 1px 8px 1px 0; }
+      .item .details td.k { color: var(--muted); }
+      .item .details a { color: var(--accent); text-decoration: none; }
+      .item .details a:hover { text-decoration: underline; }
+
+      #empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 20px;
+        text-align: center;
+      }
+      #pick-btn, #rescan-btn, #add-lib-btn {
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg);
+        font-size: 13px;
+        cursor: pointer;
+      }
+      #pick-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+      #pick-btn:hover { filter: brightness(1.08); }
+
+      /* elevation sparkline in expanded item */
+      .details svg.profile { display: block; margin-top: 6px; width: 100%; height: 56px; }
+      .details .profile-axes {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .details .sheet-links { display: flex; gap: 12px; margin-top: 6px; }
+      .details .sheet-links a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 12px;
+      }
+      .details .sheet-links a:hover { text-decoration: underline; }
+
+      #footer {
+        padding: 6px 14px;
+        border-top: 1px solid var(--border);
+        font-size: 11px;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ---------- map ---------- */
+      #map {
+        flex: 1;
+        min-width: 0;
+      }
+      .maplibregl-ctrl select {
+        font: inherit;
+        font-size: 12px;
+        padding: 4px;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="sidebar">
+        <header>
+          <h1>GPX Library</h1>
+          <input id="search" type="search" placeholder="Search tracks…" />
+          <div id="coll-filter-box" class="filter-box" style="display:none">
+            <div class="filter-title">Collections</div>
+            <div id="coll-filters"></div>
+          </div>
+          <div id="range-filter-box" class="filter-box" style="display:none">
+            <div class="filter-box-head">
+              <div class="filter-title">Distance (km)</div>
+              <button id="filters-reset-btn" title="Reset all filters">Reset</button>
+            </div>
+            <div class="num-row">
+              <input id="dist-min" class="num-input" type="number" min="0" step="1" placeholder="min" />
+              <span class="num-sep">–</span>
+              <input id="dist-max" class="num-input" type="number" min="0" step="1" placeholder="max" />
+            </div>
+            <div class="filter-title">Elevation gain (m)</div>
+            <div class="num-row">
+              <input id="ele-min" class="num-input" type="number" min="0" step="100" placeholder="min" />
+              <span class="num-sep">–</span>
+              <input id="ele-max" class="num-input" type="number" min="0" step="100" placeholder="max" />
+            </div>
+          </div>
+        </header>
+        <div id="empty">
+          <div>Pick the folder containing your GPX files<br />(subfolders become collections)</div>
+          <button id="pick-btn">Choose folder…</button>
+        </div>
+        <div id="tree"></div>
+        <div id="footer" style="display:none">
+          <span id="track-count"></span>
+          <span style="display:flex; gap:6px">
+            <button id="add-lib-btn" title="Add another GPX folder to the library">+ Folder</button>
+            <button id="rescan-btn">Rescan</button>
+          </span>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+    <!-- legacy folder input, hidden; used by Safari/Firefox -->
+    <input id="legacy-dir-input" type="file" webkitdirectory multiple hidden />
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

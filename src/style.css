@@ -1,0 +1,12 @@
+/* GPX Library — component styles live in index.html <style>;
+   this file holds maplibre container + popup tweaks. */
+
+#map { height: 100%; }
+
+.maplibregl-popup-content {
+  font-size: 13px;
+  padding: 8px 12px;
+}
+.maplibregl-popup-content table { border-collapse: collapse; }
+.maplibregl-popup-content td { padding: 1px 8px 1px 0; }
+.maplibregl-popup-content td.k { color: #6b7075; }

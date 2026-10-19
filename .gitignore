@@ -1,0 +1,8 @@
+node_modules/
+dist/
+tsconfig.tsbuildinfo
+.DS_Store
+
+# user data — never commit GPX libraries or scraped metadata
+public/sheets.json
+*.gpx
