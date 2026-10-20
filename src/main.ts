@@ -5,7 +5,7 @@ import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 maplibregl.setWorkerUrl(workerUrl);
 import type { TrackMeta } from "./gpx";
-import { groupByCollection, matchesQuery, collectionColorMap, collectionLabel } from "./collections";
+import { groupByCollection, matchesQuery, collectionColorMap, collectionLabel, trackColorMap } from "./collections";
 import { fmtDistance, fmtGain, fmtDuration } from "./format";
 import { addDirectory, rescan, hasFsAccessApi, tracksFromFileList, readLibraryFile } from "./fsaccess";
 import { parseSheets, buildJoin } from "./metadata";
@@ -86,6 +86,7 @@ const filtersResetBtn = document.getElementById("filters-reset-btn") as HTMLButt
 let allTracks: TrackMeta[] = [];
 let selectedId: string | null = null;
 let collColors = new Map<string, string>();
+let trackColors = new Map<string, string>(); // every track its own color
 let enabledCollections = new Set<string>(); // empty = all enabled
 let distMinKm = 0;
 let distMaxKm = Infinity;
@@ -189,7 +190,7 @@ function setupMapLayers() {
   map.addSource("tracks", { type: "geojson", data: emptyFc() });
   map.addSource("sel", { type: "geojson", data: emptyFc() });
 
-  // all tracks, colored by collection
+  // all tracks, each with its own color
   map.addLayer({
     id: "tracks-casing",
     type: "line",
@@ -281,6 +282,23 @@ function visibleTracks(): TrackMeta[] {
   });
 }
 
+/** Collections present in the CURRENT visible set (after all filters). */
+function visibleCollections(): Set<string> {
+  return new Set(visibleTracks().map((t) => t.collection));
+}
+
+/** One visible collection → every track gets its own color.
+ *  Several visible → one flat color per collection so they read as groups. */
+function usePerTrackColors(): boolean {
+  return visibleCollections().size <= 1;
+}
+
+function colorForTrack(t: TrackMeta): string {
+  return usePerTrackColors()
+    ? trackColors.get(t.id) ?? "#999999"
+    : collColors.get(t.collection) ?? "#999999";
+}
+
 function refreshAll() {
   renderTree();
   const tracksSource = map.getSource("tracks") as maplibregl.GeoJSONSource | undefined;
@@ -320,7 +338,14 @@ function renderCollFilters() {
     };
     const swatch = document.createElement("span");
     swatch.className = "swatch";
-    swatch.style.background = c.color;
+    if (usePerTrackColors()) {
+      const cs = c.tracks.map((t) => trackColors.get(t.id)).filter((x): x is string => !!x);
+      swatch.style.background = cs.length
+        ? `linear-gradient(90deg, ${cs.slice(0, 5).join(", ")})`
+        : c.color;
+    } else {
+      swatch.style.background = c.color;
+    }
     label.append(cb, swatch, document.createTextNode(collectionLabel(c)));
     collFilters.appendChild(label);
   }
@@ -391,7 +416,7 @@ function trackFeature(t: TrackMeta): GeoJSON.Feature {
     properties: {
       ...(t.geojson.features[0].properties ?? {}),
       id: t.id,
-      color: collColors.get(t.collection) ?? "#999999",
+      color: colorForTrack(t),
     },
   };
 }
@@ -417,11 +442,20 @@ function renderTree() {
     const box = document.createElement("div");
     box.className = "collection";
 
+    // header swatch: gradient of member track colors when per-track mode,
+    // flat collection color when several collections are visible
+    const headSwatch = usePerTrackColors()
+      ? (() => {
+          const cs = coll.tracks.map((t) => trackColors.get(t.id)).filter((c): c is string => !!c);
+          return cs.length ? `linear-gradient(90deg, ${cs.slice(0, 5).join(", ")})` : coll.color;
+        })()
+      : coll.color;
+
     const head = document.createElement("div");
     head.className = "coll-head";
     head.innerHTML =
       `<span class="chev">▶</span>` +
-      `<span class="swatch" style="background:${coll.color}"></span>` +
+      `<span class="swatch" style="background:${headSwatch}"></span>` +
       `<span class="label">${escapeHtml(collectionLabel(coll))}</span>` +
       `<span class="count">${coll.tracks.length}</span>`;
     head.onclick = () => box.classList.toggle("open");
@@ -430,13 +464,13 @@ function renderTree() {
 
     const files = document.createElement("div");
     files.className = "files";
-    for (const t of coll.tracks) files.appendChild(renderItem(t, coll.color));
+    for (const t of coll.tracks) files.appendChild(renderItem(t));
     box.appendChild(files);
     tree.appendChild(box);
   }
 }
 
-function renderItem(t: TrackMeta, collColor: string): HTMLElement {
+function renderItem(t: TrackMeta): HTMLElement {
   const item = document.createElement("div");
   item.className = "item" + (t.id === selectedId ? " selected" : "");
   item.dataset.id = t.id;
@@ -444,7 +478,7 @@ function renderItem(t: TrackMeta, collColor: string): HTMLElement {
   const row = document.createElement("div");
   row.className = "row";
   row.innerHTML =
-    `<span class="swatch" style="background:${collColor}"></span>` +
+    `<span class="swatch" style="background:${colorForTrack(t)}"></span>` +
     `<span class="name">${escapeHtml(t.name)}</span>`;
   item.appendChild(row);
 
@@ -634,6 +668,7 @@ function loadTracks(tracks: TrackMeta[], opts: { keepView?: boolean } = {}) {
   allTracks = tracks;
   selectedId = null;
   collColors = collectionColorMap(tracks);
+  trackColors = trackColorMap(tracks);
   enabledCollections.clear();
 
   // metadata join: prefer the Recto Verso sheet title as display name

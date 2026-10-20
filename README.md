@@ -2,17 +2,19 @@
 
 A browser app for browsing a directory of GPX files on a map — think of it as
 a library view for your GPS tracks. Every file in the folder (and its
-subfolders) is plotted as a colored path, and listed in a sidebar organized by
-collection. Click a path on the map to expand its entry in the list, click a
-list entry to zoom to its route. No backend, no account, no uploads: your
-files never leave your machine.
+subfolders) is plotted as a path with its own distinct color, and listed in a
+sidebar organized by collection. Click a path on the map to expand its entry
+in the list, click a list entry to zoom to its route. No backend, no account,
+no uploads: your files never leave your machine.
 
 ![screenshot placeholder](docs/screenshot.png)
 
 ## What it does
 
 - **Folder-based libraries** — pick one or more GPX directories; subfolders
-  become collections, each with a stable color shared between map and list
+  become collections. Colors adapt: viewing one collection, every track gets
+  its own distinct color; viewing several, each collection reverts to a
+  single shared color so groups read at a glance
 - **Two-way selection** — click a path to expand + scroll to its list entry;
   click a list entry to zoom to its path; `Esc` clears the selection
 - **Details panel** — distance, elevation gain, duration, file name,
@@ -57,8 +59,9 @@ file server).
    Open http://localhost:5173.
 
 2. **Load your GPX files.** Click **Choose folder…** and pick the directory
-   containing your GPX files. Subfolders become collections (one color
-   each). Add more folders with **+ Folder** in the footer.
+   containing your GPX files. Subfolders become collections. One collection
+   visible → each track its own color; several visible → one color per
+   collection. Add more folders with **+ Folder** in the footer.
 
 3. **Browse and select.** Click a path on the map or an entry in the list —
    both stay in sync. The expanded entry shows stats and the elevation

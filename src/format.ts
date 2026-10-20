@@ -11,6 +11,14 @@ export function colorFor(index: number): string {
   return PALETTE[index % PALETTE.length];
 }
 
+/** Per-track color: golden-angle HSL walk. Unlimited (no 24-cycle), so
+ *  libraries with hundreds of tracks stay visually distinct, and adjacent
+ *  tracks in the list always land far apart on the color wheel. */
+export function trackColorFor(index: number): string {
+  const hue = (index * 137.508) % 360;
+  return `hsl(${hue.toFixed(1)}, 65%, 45%)`;
+}
+
 export function fmtDistance(km: number): string {
   return km < 10 ? `${km.toFixed(2)} km` : `${Math.round(km)} km`;
 }

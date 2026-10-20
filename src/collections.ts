@@ -1,10 +1,10 @@
 // A collection = a source library directory (the folder you picked).
 // Subfolders become groups WITHIN the collection, shown as "Lib / Sub".
-// Colors are assigned per collection key, stable across filters:
-// always derive from the FULL track list, never the filtered subset.
+// Every track gets its OWN color (trackColorMap in main.ts); collection
+// colors only remain as UI fallbacks (header/filter swatch gradients).
 
 import type { TrackMeta } from "./gpx";
-import { colorFor } from "./format";
+import { colorFor, trackColorFor } from "./format";
 
 export interface Collection {
   key: string; // unique: "lib" or "lib/::/sub"
@@ -44,6 +44,13 @@ export function groupByCollection(tracks: TrackMeta[], colorMap?: CollColorMap):
 export function collectionColorMap(tracks: TrackMeta[]): Map<string, string> {
   const colls = groupByCollection(tracks);
   return new Map(colls.map((c) => [c.key, c.color]));
+}
+
+/** Shared track→color map derived from the FULL library, keyed by track id.
+ *  Every track gets its own color (not one color per collection). Derived
+ *  once from the full list so colors stay stable across filter changes. */
+export function trackColorMap(tracks: TrackMeta[]): Map<string, string> {
+  return new Map(tracks.map((t, i) => [t.id, trackColorFor(i)]));
 }
 
 export function collectionLabel(c: { lib: string; sub: string }): string {
