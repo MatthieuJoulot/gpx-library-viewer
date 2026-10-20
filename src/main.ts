@@ -582,7 +582,7 @@ function cssEscape(s: string): string {
 //  - Chromium: File System Access API (persistent handles, rescan possible)
 //  - Safari/Firefox: legacy webkitdirectory upload (one-shot snapshot, no rescan)
 let legacyMode = !hasFsAccessApi();
-console.log("[gpx-library] file access:", legacyMode ? "legacy upload (Safari/Firefox)" : "File System Access API (Chromium)");
+console.log("[gpx-library-viewer] file access:", legacyMode ? "legacy upload (Safari/Firefox)" : "File System Access API (Chromium)");
 if (legacyMode) {
   // No persistent handles in this browser → Rescan impossible. Show why, don't hide.
   rescanBtn.disabled = true;
@@ -713,7 +713,7 @@ function applySheetNames(tracks: TrackMeta[]) {
   // (dev server root, legacy mode). Missing file = no links, app still works.
   void loadSheets().then((sheets) => {
     sheetJoin = buildJoin(tracks, sheets);
-    console.log(`[gpx-library] metadata: ${sheetJoin.size}/${tracks.length} tracks joined to route sheets`);
+    console.log(`[gpx-library-viewer] metadata: ${sheetJoin.size}/${tracks.length} tracks joined to route sheets`);
     // prefer the sheet title as display name
     for (const t of tracks) {
       const s = sheetJoin.get(t.id);
@@ -740,6 +740,6 @@ async function loadSheets(): Promise<SheetMeta[]> {
   } catch {
     /* ignore */
   }
-  console.warn("[gpx-library] sheets.json not found — route-sheet links disabled. Place it in the picked GPX folder root.");
+  console.warn("[gpx-library-viewer] sheets.json not found — route-sheet links disabled. Place it in the picked GPX folder root.");
   return [];
 }
