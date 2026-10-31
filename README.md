@@ -24,7 +24,8 @@ no uploads: your files never leave your machine.
   free-text search; one-click **Reset**
 - **Basemaps** — OpenStreetMap, CyclOSM, Esri satellite (all keyless)
 - **Add folders & rescan** — load multiple directories; adding a parent or
-  child of an already-loaded folder never duplicates tracks
+  child of an already-loaded folder never duplicates tracks; **- Folder**
+  removes a loaded library and its tracks
 - **Everything local** — parsing, filtering, and rendering all happen in
   your browser
 
@@ -61,7 +62,8 @@ file server).
 2. **Load your GPX files.** Click **Choose folder…** and pick the directory
    containing your GPX files. Subfolders become collections. One collection
    visible → each track its own color; several visible → one color per
-   collection. Add more folders with **+ Folder** in the footer.
+   collection. Add more folders with **+ Folder** in the footer, remove one
+   with **- Folder**.
 
 3. **Browse and select.** Click a path on the map or an entry in the list —
    both stay in sync. The expanded entry shows stats and the elevation

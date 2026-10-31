@@ -7,7 +7,7 @@ maplibregl.setWorkerUrl(workerUrl);
 import type { TrackMeta } from "./gpx";
 import { groupByCollection, matchesQuery, collectionColorMap, collectionLabel, trackColorMap } from "./collections";
 import { fmtDistance, fmtGain, fmtDuration } from "./format";
-import { addDirectory, rescan, hasFsAccessApi, tracksFromFileList, readLibraryFile } from "./fsaccess";
+import { addDirectory, rescan, hasFsAccessApi, tracksFromFileList, readLibraryFile, libraryNames, removeDirectory } from "./fsaccess";
 import { parseSheets, buildJoin } from "./metadata";
 import type { SheetMeta } from "./metadata";
 
@@ -69,6 +69,7 @@ const empty = document.getElementById("empty")!;
 const pickBtn = document.getElementById("pick-btn")!;
 const rescanBtn = document.getElementById("rescan-btn") as HTMLButtonElement;
 const addLibBtn = document.getElementById("add-lib-btn") as HTMLButtonElement;
+const removeLibBtn = document.getElementById("remove-lib-btn") as HTMLButtonElement;
 const footer = document.getElementById("footer")!;
 const trackCount = document.getElementById("track-count")!;
 const search = document.getElementById("search") as HTMLInputElement;
@@ -656,10 +657,71 @@ rescanBtn.onclick = async () => {
   }
 };
 
+// ---------- remove folder ----------
+// Lists loaded library roots in a small popup above the footer; click one to
+// drop it. Works from the moment at least one collection is loaded.
+let libMenu: HTMLElement | null = null;
+
+function closeLibMenu() {
+  libMenu?.remove();
+  libMenu = null;
+  document.removeEventListener("click", onLibMenuOutside, true);
+}
+
+function onLibMenuOutside(e: MouseEvent) {
+  if (libMenu && !libMenu.contains(e.target as Node) && e.target !== removeLibBtn) closeLibMenu();
+}
+
+function loadedLibraries(): string[] {
+  const names = hasFsAccessApi()
+    ? libraryNames()
+    : [...new Set(allTracks.map((t) => t.collection.split("/::/")[0]))];
+  return names.sort((a, b) => a.localeCompare(b));
+}
+
+function removeLibrary(lib: string) {
+  closeLibMenu();
+  removeDirectory(lib); // fs-access mode: forget the handle; legacy: no-op
+  const remaining = allTracks.filter((t) => t.collection.split("/::/")[0] !== lib);
+  if (remaining.length === allTracks.length) return; // no match, nothing to do
+  loadTracks(remaining, { keepView: true });
+}
+
+removeLibBtn.onclick = () => {
+  if (libMenu) {
+    closeLibMenu();
+    return; // second click = toggle closed
+  }
+  const libs = loadedLibraries();
+  if (!libs.length) return; // nothing loaded yet — button unreachable but safe
+  libMenu = document.createElement("div");
+  libMenu.className = "lib-menu";
+  for (const name of libs) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.title = `Remove "${name}" and its tracks`;
+    b.textContent = name;
+    b.onclick = (ev) => {
+      ev.stopPropagation();
+      removeLibrary(name);
+    };
+    libMenu.appendChild(b);
+  }
+  footer.appendChild(libMenu);
+  // close when clicking anywhere else (next tick so this click doesn't count)
+  setTimeout(() => document.addEventListener("click", onLibMenuOutside, true), 0);
+};
+
 search.oninput = () => refreshAll();
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") select(null, { fitMap: false });
+  if (e.key === "Escape") {
+    if (libMenu) {
+      closeLibMenu();
+      return;
+    }
+    select(null, { fitMap: false });
+  }
 });
 
 // ---------- boot ----------
@@ -670,6 +732,21 @@ function loadTracks(tracks: TrackMeta[], opts: { keepView?: boolean } = {}) {
   collColors = collectionColorMap(tracks);
   trackColors = trackColorMap(tracks);
   enabledCollections.clear();
+
+  // library emptied (e.g. last folder removed) → back to the start screen
+  if (!tracks.length) {
+    sheetJoin = new Map();
+    empty.style.display = "";
+    tree.style.display = "none";
+    footer.style.display = "none";
+    filtersBox.style.display = "none";
+    rangeFiltersBox.style.display = "none";
+    const tracksSource = map.getSource("tracks") as maplibregl.GeoJSONSource | undefined;
+    tracksSource?.setData(emptyFc());
+    const selSource = map.getSource("sel") as maplibregl.GeoJSONSource | undefined;
+    selSource?.setData(emptyFc());
+    return;
+  }
 
   // metadata join: prefer the Recto Verso sheet title as display name
   applySheetNames(tracks);

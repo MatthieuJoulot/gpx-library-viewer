@@ -202,7 +202,7 @@
         padding: 20px;
         text-align: center;
       }
-      #pick-btn, #rescan-btn, #add-lib-btn {
+      #pick-btn, #rescan-btn, #add-lib-btn, #remove-lib-btn {
         padding: 8px 14px;
         border: 1px solid var(--border);
         border-radius: 8px;
@@ -236,11 +236,56 @@
         color: var(--muted);
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        position: relative;
       }
+      /* footer buttons are compact so the whole bar stays on one line */
+      #footer #add-lib-btn, #footer #remove-lib-btn, #footer #rescan-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      #footer #track-count { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* "- Folder" popup: lists loaded library roots, click one to remove it */
+      .lib-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 14px;
+        margin-bottom: 6px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        min-width: 200px;
+        max-height: 50vh;
+        overflow: auto;
+        padding: 4px;
+        z-index: 10;
+      }
+      .lib-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 6px;
+        background: none;
+        font-size: 12px;
+        color: var(--text);
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .lib-menu button:hover { background: #eceef1; }
       #gh-link {
         color: var(--muted);
         text-decoration: none;
-        padding: 3px 8px;
+        padding: 3px 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
       #gh-link:hover { color: var(--text); }
 
@@ -295,6 +340,7 @@
           <span id="track-count"></span>
           <span style="display:flex; gap:6px; align-items:center">
             <button id="add-lib-btn" title="Add another GPX folder to the library">+ Folder</button>
+            <button id="remove-lib-btn" title="Remove a loaded GPX folder">- Folder</button>
             <button id="rescan-btn">Rescan</button>
             <a id="gh-link" href="https://github.com/MatthieuJoulot/gpx-library-viewer" target="_blank" rel="noopener" title="Source on GitHub">GitHub ↗</a>
           </span>

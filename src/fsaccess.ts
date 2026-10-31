@@ -42,6 +42,17 @@ export async function addDirectory(): Promise<TrackMeta[]> {
   return await rescan();
 }
 
+/** Names of the loaded library root folders (File System Access mode). */
+export function libraryNames(): string[] {
+  return [...dirHandles.keys()];
+}
+
+/** Drop a loaded library directory (File System Access mode) so later
+ *  rescans skip it. Returns true if it was loaded. */
+export function removeDirectory(name: string): boolean {
+  return dirHandles.delete(name);
+}
+
 /** Re-read every added library directory. Track ids deduped across libraries. */
 export async function rescan(): Promise<TrackMeta[]> {
   if (!dirHandles.size) throw new Error("no directory selected");
