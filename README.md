@@ -7,7 +7,7 @@ sidebar organized by collection. Click a path on the map to expand its entry
 in the list, click a list entry to zoom to its route. No backend, no account,
 no uploads: your files never leave your machine.
 
-![screenshot placeholder](docs/screenshot.png)
+![GPX Library Viewer screenshot](docs/screenshot.png)
 
 ## What it does
 
